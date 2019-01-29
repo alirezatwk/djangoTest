@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from PIL import Image
+
 #from django.contrib.auth.models import User
 
 class Post(models.Model):
@@ -13,6 +14,6 @@ class Post(models.Model):
 		#return self.title
 
 class Picture(models.Model):
-	photo = models.ImageField(upload_to='photo', default="")
+	photo = models.ImageField(upload_to='media/photo', default="")
 	post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
