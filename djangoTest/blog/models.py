@@ -14,6 +14,6 @@ class Post(models.Model):
 		#return self.title
 
 class Picture(models.Model):
-	photo = models.ImageField(upload_to='media/photo', default="")
+	photo = models.ImageField(upload_to='media_photo', default="")
 	post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
