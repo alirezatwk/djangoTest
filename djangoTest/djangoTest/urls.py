@@ -25,4 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', user_views.register, name="register"),
     path('', include('blog.urls')),
+    path('image/', include('editImage.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
