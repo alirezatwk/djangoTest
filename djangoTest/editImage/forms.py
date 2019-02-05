@@ -1,6 +1,5 @@
 from django import forms
 
-
-class editImageForm(forms):
+class EditImageForm(forms.Form):
     photo = forms.ImageField()
     grayScale = forms.BooleanField()
