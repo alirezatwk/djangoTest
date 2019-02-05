@@ -1,0 +1,10 @@
+{% extends "editImage/base.html" %}
+{% block content %}
+    <form method="POST" enctype="multipart/form-data"/>
+        {% csrf_token %}
+        <input type="file" name="photo">
+        gray scale : <input type="checkbox" name="grayScale">
+        <input type="submit" name="showPhoto" value="Show">
+        <input type="submit" name="submitShare" value="Share">
+    </form>
+{% endblock content %}
