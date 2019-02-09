@@ -1,11 +1,20 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .forms import EditImageForm
 from PIL import Image
 
 def home(request):
 	if request.method == 'POST':
 
+		form = EditImageForm(request.POST, request.FILES)
 
+		for value in request.POST:
+			print(value)
+
+		if form.is_valid():
+			photo = Image.open(request.FILES['photo'])
+			photo.show()
+			print("SAAAAAAAAAAAG")
+		return render(request, 'editImage/home.html', {'form': form})
 
 		if 'showPhoto' in request.POST:
 
@@ -14,14 +23,18 @@ def home(request):
 				# AGE AKS BOD
 				try:
 					photo = Image.open(request.FILES['photo'])
-					print("HAHAH")
+
+					if 'grayScale' in request.POST:
+						photo = photo.convert('LA')
+
+
+					photo.save("djangoTest/media/photo.png") # TODO ESME AKSA
+					return render(request, 'editImage/home.html', {'form': form, 'photoUrl': "photo.png"})
 				# AGE NABOD
 				except:
 					print("mashti nistia")
 
 
-		for value in request.POST:
-			print(value)
 
 
 		"""if form.is_valid():

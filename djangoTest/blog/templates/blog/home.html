@@ -9,7 +9,7 @@
 		    </div>
               {% for picture in post.picture_set.all %}
                   <img src="{{ picture.photo.url }}" alt="">
-                  
+                  {{ picture.photo.url }}
               {% endfor %}
 		    <h2><a class="article-title" href="#">{{ post.title }}</a></h2>
 		    <p class="article-content">{{ post.content }}</p>

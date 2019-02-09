@@ -2,9 +2,16 @@
 {% block content %}
     <form method="POST" enctype="multipart/form-data"/>
         {% csrf_token %}
-        <input type="file" name="photo">
+        {{ form }}
+        {% comment %}<input type="file" name="photo" >
         gray scale : <input type="checkbox" name="grayScale">
+        {% endcomment %}
         <input type="submit" name="showPhoto" value="Show">
         <input type="submit" name="submitShare" value="Share">
+
     </form>
+    <div>
+        <img src="/media/{{ photoUrl }}" alt="">
+        {{ MEDIA_URL }}{{ photoUrl }}
+    </div>
 {% endblock content %}
