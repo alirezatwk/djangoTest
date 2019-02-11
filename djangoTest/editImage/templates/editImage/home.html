@@ -1,8 +1,14 @@
 {% extends "editImage/base.html" %}
 {% block content %}
+    <p>
+        {{ sucess }}
+    </p>
+    <p>
+        {{ error }}
+    </p>
     <form method="POST" enctype="multipart/form-data"/>
         {% csrf_token %}
-        {{ form }}
+        {{ form.as_p }}
         {% comment %}<input type="file" name="photo" >
         gray scale : <input type="checkbox" name="grayScale">
         {% endcomment %}
