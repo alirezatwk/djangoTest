@@ -2,9 +2,15 @@ from django.shortcuts import render
 from .forms import EditImageForm
 from PIL import Image
 from blog.models import Picture, Post
+import uuid, random
+
+def makeName():
+	maxRandom = 500
+	return str(uuid.getnode()) + '-' + str(random.randint(0, 500)) + ".png"
 
 def show(request):
 	form = EditImageForm(request.POST, request.FILES)
+
 	if form.is_valid():
 		photo = Image.open(request.FILES['photo'])
 		if 'grayScale' in request.POST:
@@ -43,9 +49,10 @@ def show(request):
 			rotate = float(request.POST['rotate'])
 			photo = photo.rotate(rotate)
 
-		photo.save("djangoTest/media/photo.png")  # TODO ESME AKSA
+		name = str(uuid.getnode()) + ".png"
+		photo.save("djangoTest/media/" + name)
 
-		return render(request, 'editImage/home.html', {'form': form, 'photoUrl': "photo.png"})
+		return render(request, 'editImage/home.html', {'form': form, 'photoUrl': name})
 	return render(request, 'editImage/home.html', {'form': form})
 
 
@@ -89,20 +96,22 @@ def share(request):
 			rotate = float(request.POST['rotate'])
 			photo = photo.rotate(rotate)
 
-		photo.save("djangoTest/media/media_photo/photo.png")  # TODO ESME AKSA
+		name = makeName()
+		photo.save("djangoTest/media/media_photo/" + name)
 
 
 		mdl = Picture()
 
 		pst = Post.objects.first()
 		mdl.post = pst
-		mdl.photo = '/media_photo/photo.png'
+		mdl.photo = '/media_photo/' + name
 		mdl.save()
 
-		return render(request, 'editImage/home.html', {'form': form, 'photoUrl': "photo.png", 'sucess': 'Your photo tamam tamam !'})
+		return render(request, 'editImage/home.html', {'form': form, 'sucess': 'Your photo tamam tamam !'})
 	return render(request, 'editImage/home.html', {'form': form})
 
 def home(request):
+	print(uuid.getnode())
 	if request.method == 'POST':
 		for value in request.POST:
 			print(value)
@@ -113,18 +122,8 @@ def home(request):
 		if 'submitShare' in request.POST:
 			return share(request)
 
-
-		"""if form.is_valid():
-			print("SAG MASAB\n\n")
-			photo = Image.open(form.cleaned_data['photo'])
-			print(photo.getpixel((0, 0)))
-			grayScale = form.cleaned_data['grayScale']
-			print(grayScale)
-			photo.show()
-			print(3)"""
-
-
 	form = EditImageForm()
+	form.setImage('/photo.png')
 	return render(request, 'editImage/home.html', {'form': form})
 
 
