@@ -4,16 +4,16 @@ from PIL import Image
 from blog.models import Picture, Post
 import uuid, random
 
-def makeName():
+def makeName(request):
 	maxRandom = 500
-	return str(uuid.getnode()) + '-' + str(random.randint(0, maxRandom)) + ".png"
+	return str(request.session.session_key) + '-' + str(random.randint(0, maxRandom)) + ".png"
 
-def getName():
-	return str(uuid.getnode()) + ".png"
+def getName(request):
+	return str(request.session.session_key) + ".png"
 
 def havePhoto(request):
 	try:
-		photo = Image.open("djangoTest/media/" + getName())
+		photo = Image.open("djangoTest/media/" + getName(request))
 		return True
 	except:
 		return False
@@ -56,7 +56,7 @@ def getCropError(request):
 	if 'photo' in request.FILES:
 		photo = Image.open(request.FILES['photo'])
 	else:
-		photo = Image.open("djangoTest/media/" + getName())
+		photo = Image.open("djangoTest/media/" + getName(request))
 	width, height = photo.size
 	if left >= right or \
 		up >= down:
@@ -102,7 +102,7 @@ def getError(request):
 
 def saveOriginalImage(request):
 	photo = Image.open(request.FILES['photo'])
-	photo.save("djangoTest/media/" + getName())
+	photo.save("djangoTest/media/" + getName(request))
 
 def editPhoto(request, photo):
 	if hasGrayScale(request):
@@ -123,7 +123,7 @@ def editPhoto(request, photo):
 	return photo
 
 def share(request, photo):
-	name = makeName()
+	name = makeName(request)
 	photo.save("djangoTest/media/media_photo/" + name)
 
 	if not Post.objects.filter(key=request.session.session_key).exists():
@@ -157,10 +157,10 @@ def home(request):
 
 		uploadMessage = "We have your last photo ! Just for a new photo use upload !"
 
-		photo = Image.open("djangoTest/media/" + getName())
+		photo = Image.open("djangoTest/media/" + getName(request))
 		photo = editPhoto(request, photo)
 
-		name = makeName()
+		name = makeName(request)
 		photo.save("djangoTest/media/" + name)
 
 		success = ""
