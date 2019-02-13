@@ -1,7 +1,10 @@
-{% extends "editImage/base.html" %}
+{% extends "blog/base.html" %}
 {% block content %}
     <p>
-        {{ sucess }}
+        {{ success }}
+    </p>
+    <p>
+        {{ uploadMessage }}
     </p>
     <p>
         {{ error }}
@@ -17,7 +20,8 @@
 
     </form>
     <div>
-        <img src="/media/{{ photoUrl }}" alt="">
-        {{ MEDIA_URL }}{{ photoUrl }}
+        {% if photoUrl %}
+            <img src="/media/{{ photoUrl }}">
+        {% endif %}
     </div>
 {% endblock content %}

@@ -6,124 +6,167 @@ import uuid, random
 
 def makeName():
 	maxRandom = 500
-	return str(uuid.getnode()) + '-' + str(random.randint(0, 500)) + ".png"
+	return str(uuid.getnode()) + '-' + str(random.randint(0, maxRandom)) + ".png"
 
-def show(request):
-	form = EditImageForm(request.POST, request.FILES)
+def getName():
+	return str(uuid.getnode()) + ".png"
 
-	if form.is_valid():
+def havePhoto(request):
+	try:
+		photo = Image.open("djangoTest/media/" + getName())
+		return True
+	except:
+		return False
+
+def numberOfFields(request, attr):
+	count = 0
+	for str in attr:
+		if request.POST[str] != "":
+			count += 1
+	return count
+
+def numberOfCropFields(request):
+	attr = ['left', 'right', 'up', 'down']
+	return numberOfFields(request, attr)
+
+def numberOfResizeFields(request):
+	attr = ['width', 'height']
+	return numberOfFields(request, attr)
+
+def hasGrayScale(request):
+	if 'grayScale' in request.POST:
+		return True
+	return False
+
+def hasRotate(request):
+	if request.POST['rotate'] != "":
+		return True
+	return False
+
+def getCropError(request):
+	count = numberOfCropFields(request)
+	if count == 0:
+		return ""
+	if 0 < count and count < 4:
+		return "You must fill all the crop fields !"
+	left = int(request.POST['left'])
+	right = int(request.POST['right'])
+	up = int(request.POST['up'])
+	down = int(request.POST['down'])
+	if 'photo' in request.FILES:
 		photo = Image.open(request.FILES['photo'])
-		if 'grayScale' in request.POST:
-			photo = photo.convert('LA')
+	else:
+		photo = Image.open("djangoTest/media/" + getName())
+	width, height = photo.size
+	if left >= right or \
+		up >= down:
+		return "Values must be like this 0 <= left < right < width and 0 <= up < down < height"
+	if left < 0 or width <= right or \
+		up < 0 or height <= down:
+		return "Values must be like this 0 <= left < right < width and 0 <= up < down < height"
+	return ""
 
-		if request.POST['left'] != "" or request.POST['right'] != "" or request.POST['up'] != "" or request.POST[
-			'down'] != "":
+def getResizeError(request):
+	count = numberOfResizeFields(request)
+	if count == 0:
+		return ""
+	if count == 1:
+		return "You must fill all the resize fields !"
+	width = int(request.POST['width'])
+	height = int(request.POST['height'])
+	if width <= 0 or \
+		height <= 0:
+		return "Values of resize must be positive"
+	return ""
 
-			if request.POST['left'] == "" or request.POST['right'] == "" or request.POST['up'] == "" or \
-					request.POST['down'] == "":
-				return render(request, 'editImage/home.html',
-							  {'form': form, 'error': 'Not valid data for crop !'})
-			maxWidth, maxHeight = photo.size
-			left = int(request.POST['left'])
-			right = int(request.POST['right'])
-			up = int(request.POST['up'])
-			down = int(request.POST['down'])
+def getNotFileError(request):
+	if havePhoto(request) == False and 'photo' not in request.FILES:
+		return "No photo uploaded !"
+	return ""
 
-			if left < 0 or up < 0 or left >= right or up >= down or right > maxWidth or down > maxHeight:
-				return render(request, 'editImage/home.html', {'form': form, 'error': 'Not valid data for crop !'})
+def hasError(request):
+	if getNotFileError(request) != "":
+		return True
+	if getCropError(request) != "" or getResizeError(request) != "":
+		return True
+	return False
 
-			photo = photo.crop((left, up, right, down))
+def getError(request):
+	if getNotFileError(request) != "":
+		return getNotFileError(request)
+	if getCropError(request) != "":
+		return getCropError(request)
+	if getResizeError(request) != "":
+		return getResizeError(request)
+	return ""
 
-		if request.POST['width'] != "" or request.POST['height'] != "":
-			if request.POST['width'] == "" or request.POST['height'] == "":
-				return render(request, 'editImage/home.html',
-							  {'form': form, 'error': 'Not valid data for resize !'})
-			width = int(request.POST['width'])
-			height = int(request.POST['height'])
-			if width <= 0 or height <= 0:
-				return render(request, 'editImage/home.html',
-							  {'form': form, 'error': 'Not valid data for resize !'})
-			photo = photo.resize((width, height))
+def saveOriginalImage(request):
+	photo = Image.open(request.FILES['photo'])
+	photo.save("djangoTest/media/" + getName())
 
-		if request.POST['rotate'] != "":
-			rotate = float(request.POST['rotate'])
-			photo = photo.rotate(rotate)
+def editPhoto(request, photo):
+	if hasGrayScale(request):
+		photo = photo.convert('LA')
+	if numberOfCropFields(request) != 0:
+		left = int(request.POST['left'])
+		right = int(request.POST['right'])
+		up = int(request.POST['up'])
+		down = int(request.POST['down'])
+		photo = photo.crop((left, up, right, down))
+	if numberOfResizeFields(request) != 0:
+		width = int(request.POST['width'])
+		height = int(request.POST['height'])
+		photo = photo.resize((width, height))
+	if hasRotate(request):
+		rotate = float(request.POST['rotate'])
+		photo = photo.rotate(rotate)
+	return photo
 
-		name = str(uuid.getnode()) + ".png"
-		photo.save("djangoTest/media/" + name)
+def share(request, photo):
+	name = makeName()
+	photo.save("djangoTest/media/media_photo/" + name)
 
-		return render(request, 'editImage/home.html', {'form': form, 'photoUrl': name})
-	return render(request, 'editImage/home.html', {'form': form})
+	if not Post.objects.filter(key=request.session.session_key).exists():
+		pst = Post(key=request.session.session_key)
+		pst.save()
+	else:
+		pst = Post.objects.get(key=request.session.session_key)
 
-
-def share(request):
-	form = EditImageForm(request.POST, request.FILES)
-	if form.is_valid():
-		photo = Image.open(request.FILES['photo'])
-		if 'grayScale' in request.POST:
-			photo = photo.convert('LA')
-
-		if request.POST['left'] != "" or request.POST['right'] != "" or request.POST['up'] != "" or request.POST[
-			'down'] != "":
-
-			if request.POST['left'] == "" or request.POST['right'] == "" or request.POST['up'] == "" or \
-					request.POST['down'] == "":
-				return render(request, 'editImage/home.html',
-							  {'form': form, 'error': 'Not valid data for crop !'})
-			maxWidth, maxHeight = photo.size
-			left = int(request.POST['left'])
-			right = int(request.POST['right'])
-			up = int(request.POST['up'])
-			down = int(request.POST['down'])
-
-			if left < 0 or up < 0 or left >= right or up >= down or right > maxWidth or down > maxHeight:
-				return render(request, 'editImage/home.html', {'form': form, 'error': 'Not valid data for crop !'})
-
-			photo = photo.crop((left, up, right, down))
-
-		if request.POST['width'] != "" or request.POST['height'] != "":
-			if request.POST['width'] == "" or request.POST['height'] == "":
-				return render(request, 'editImage/home.html',
-							  {'form': form, 'error': 'Not valid data for resize !'})
-			width = int(request.POST['width'])
-			height = int(request.POST['height'])
-			if width <= 0 or height <= 0:
-				return render(request, 'editImage/home.html',
-							  {'form': form, 'error': 'Not valid data for resize !'})
-			photo = photo.resize((width, height))
-
-		if request.POST['rotate'] != "":
-			rotate = float(request.POST['rotate'])
-			photo = photo.rotate(rotate)
-
-		name = makeName()
-		photo.save("djangoTest/media/media_photo/" + name)
-
-
-		mdl = Picture()
-
-		pst = Post.objects.first()
-		mdl.post = pst
-		mdl.photo = '/media_photo/' + name
-		mdl.save()
-
-		return render(request, 'editImage/home.html', {'form': form, 'sucess': 'Your photo tamam tamam !'})
-	return render(request, 'editImage/home.html', {'form': form})
+	mdl = Picture(post=pst, photo='/media_photo/' + name)
+	mdl.save()
 
 def home(request):
-	print(uuid.getnode())
+	if not request.session.session_key:
+		request.session.create()
+
+	uploadMessage = "Upload and edit your photo !"
+	if havePhoto(request):
+		uploadMessage = "We have your last photo ! Just for a new photo use upload !"
+
+	emptyForm = EditImageForm()
 	if request.method == 'POST':
-		for value in request.POST:
-			print(value)
+		if hasError(request):
+			return render(request, 'editImage/home.html', {'form': emptyForm, 'uploadMessage': uploadMessage, 'error': getError(request)})
 
-		if 'showPhoto' in request.POST:
-			return show(request)
+		form = EditImageForm(request.POST, request.FILES)
+		if form.is_valid() == False:
+			return render(request, 'editImage/home.html', {'form': form, 'uploadMessage': uploadMessage})
 
+		if 'photo' in request.FILES:
+			saveOriginalImage(request)
+
+		uploadMessage = "We have your last photo ! Just for a new photo use upload !"
+
+		photo = Image.open("djangoTest/media/" + getName())
+		photo = editPhoto(request, photo)
+
+		name = makeName()
+		photo.save("djangoTest/media/" + name)
+
+		success = ""
 		if 'submitShare' in request.POST:
-			return share(request)
+			success = "Your photo shared !"
+			share(request, photo)
+		return render(request, 'editImage/home.html', {'form': form, 'success': success, 'uploadMessage': uploadMessage, 'photoUrl': name})
 
-	form = EditImageForm()
-	form.setImage('/photo.png')
-	return render(request, 'editImage/home.html', {'form': form})
-
-
+	return render(request, 'editImage/home.html', {'form': emptyForm, 'uploadMessage': uploadMessage})
